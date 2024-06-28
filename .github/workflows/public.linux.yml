@@ -1,0 +1,26 @@
+## Copyright 2009 Intel Corporation
+## SPDX-License-Identifier: Apache-2.0
+
+name: Public Linux
+
+on:
+  push:
+  workflow_dispatch:
+
+concurrency:
+  group: ${{ github.workflow }}-${{ github.ref }}
+  cancel-in-progress: true
+
+permissions: read-all
+
+jobs:
+  rocky-8-clang-sse2:
+    uses: ./.github/workflows/public.docker.yml
+    with:
+      image: rockylinux:8
+      cmd: |
+        git config --global --add safe.directory /__w/ospray/ospray
+        export CC=clang
+        export CXX=clang++
+        scripts/build/linux.sh -G Ninja -DBUILD_GLFW=OFF
+        PATH="$GITHUB_WORKSPACE/build/install/ospray/bin:$PATH" scripts/tests/run_tests.sh "$GITHUB_WORKSPACE" AVX2
